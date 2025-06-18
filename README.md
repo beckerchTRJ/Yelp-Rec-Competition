@@ -56,9 +56,8 @@ The final method evolved from a baseline content-based model in Homework 3 and i
 - Python 3.6.8
 - Spark 3.1.2 (**RDD-only**)
 - NumPy, Scikit-learn (no CATBoost on Vocareum)
-- Deployed under strict academic constraints (no pretraining, no external datasets)
-
-With more time, fewer computational constraints, and wider access to libraries, my end solution would likely have looked different. I was able to obtain stronger performance locally with the usage of a wider array of features and LightGBM, but this was not feasible in the final submission. 
+- Deployed under strict academic constraints (no pretraining, no external datasets
+- With more time, fewer computational constraints, and wider access to libraries, my end solution would likely have looked different. I was able to obtain stronger performance locally with the usage of a wider array of features and LightGBM, but this was not feasible in the final submission
 ---
 
 ## ▶️ How to Run
