@@ -1,68 +1,54 @@
-# 🏆 Yelp Rating Prediction – 1st Place (USC DSCI 553 Spring 2025)
+# Yelp Rating Prediction — 1st Place of 110
 
-This project placed **1st out of 110 students** in the USC DSCI 553 Spring 2025 course competition. The goal was to build a high-accuracy recommendation system using the Yelp dataset and Spark RDD, under academic and platform constraints (e.g., no DataFrames, limited libraries, memory/time limits).
+**Task:** predict the star rating a user will give a business, on a large filtered Yelp dataset.
+**Constraint:** Spark **RDD-only** (no DataFrames), a restricted library list, and hard memory and runtime limits.
+**Result:** **1st of 110** in the USC DSCI 553 (Spring 2025) course competition — validation **RMSE 0.9747** in **20 seconds** of runtime.
 
----
-
-## 📚 Overview
-
-The objective was to predict star ratings for (user, business) pairs in a large, filtered Yelp dataset using a custom recommendation system. Unlike traditional collaborative filtering models, this solution relied on **robust content-based techniques**, engineered features, and performance-tuned processing in Spark RDD.
+The counterintuitive finding: every collaborative-filtering approach I tried made the model *worse*. The winning solution uses no collaborative filtering at all — just an XGBoost regressor on carefully engineered features.
 
 ---
 
-## 🔍 Method Summary
+## Approach
 
-The final method evolved from a baseline content-based model in Homework 3 and introduced:
+**Feature engineering**
+- Business metadata: average stars, review count, price range, open status, boolean attributes
+- Category-level rating averages (the local best model also used SVD on business categories)
+- Check-in, tip, and photo counts per business
+- Geolocation: latitude/longitude, city, and a business-density grid (businesses per ~1 km cell)
+- User history: average rating, review count, account age, fans
+- **Pseudo-user profiles** — for each user, the averages of the attributes of businesses they have reviewed (typical price range, typical rating, typical location)
 
-- 🔬 **Extensive Feature Engineering**:
-  - Business metadata (stars, attributes, categories)
-  - SVD on business categories
-  - Check-in, tip, and photo counts
-  - Geolocation features (city, state, lat/lon)
-  - **Pseudo-user profiles** derived from averages of visited business attributes
+**Feature selection**
+- Generated a deliberately wide feature set, then pruned it with **backward elimination**.
 
-- 🧹 **Feature Selection**:
-  - Generated a large feature set, followed by **backward elimination** to remove noise
-  - Notably, user-centric models **degraded** performance, including:
-    - Item-based collaborative filtering
-    - Matrix factorization
-    - User bias metrics
+**What didn't work**
+- Item-based collaborative filtering, matrix factorization, and user-bias terms all *degraded* validation RMSE when blended in. The engineered content features carried more signal than the user–business interaction matrix.
 
-- 🧠 **Model Performance**:
-  - Locally, **CATBoost** achieved an RMSE of ~0.9708 but was not compatible with the submission environment.
-  - Final submitted model used a lightweight, RDD-compatible structure while retaining core feature strategies.
+**Model**
+- Final submission: XGBoost regressor (500 trees, depth 6, light L1/L2 regularization, 0.8 row and column subsampling).
+- Locally, CatBoost reached RMSE ≈ 0.9708, but it exceeded the grading environment's memory limit and CatBoost was not installed there. With fewer platform constraints the final solution would have used a wider feature set and a stronger booster.
 
----
+## Results (validation set)
 
-## 📈 Results (Validation Set)
+| Metric | Value |
+|---|---|
+| RMSE | **0.9747** |
+| Runtime | 20.18 s |
 
-- ✅ **Final RMSE**: `0.9747`
-- ⏱️ **Execution Time**: `20.18 seconds`
+| Absolute error | Predictions | Share |
+|---|---|---|
+| 0 – 1 | 102,567 | 72.2% |
+| 1 – 2 | 32,560 | 22.9% |
+| 2 – 3 | 6,107 | 4.3% |
+| 3 – 4 | 808 | 0.6% |
+| ≥ 4 | 2 | <0.01% |
 
-### 📊 Error Distribution
+## Run it
 
-| Error Range   | Count     |
-|---------------|-----------|
-| 0 ≤ error < 1 | 102,567   |
-| 1 ≤ error < 2 | 32,560    |
-| 2 ≤ error < 3 | 6,107     |
-| 3 ≤ error < 4 | 808       |
-| ≥ 4           | 2         |
-
----
-
-## ⚙️ Technologies & Constraints
-
-- Python 3.6.8
-- Spark 3.1.2 (**RDD-only**)
-- NumPy, Scikit-learn (no CATBoost on Vocareum)
-- Deployed under strict academic constraints (no pretraining, no external datasets
-- With more time, fewer computational constraints, and wider access to libraries, my end solution would likely have looked different. I was able to obtain stronger performance locally with the usage of a wider array of features and LightGBM, but this was not feasible in the final submission
----
-
-## ▶️ How to Run
-
-Run this command on the Vocareum platform or compatible Spark 3.1.2 setup:
+Built for Python 3.6, Spark 3.1.2, NumPy, pandas, and XGBoost.
 
 ```bash
-/opt/spark/spark-3.1.2-bin-hadoop3.2/bin/spark-submit competition.py <folder_path> <test_file_name> <output_file_name>
+spark-submit competition.py <folder_path> <test_file_name> <output_file_name>
+```
+
+`<folder_path>` is the directory containing the Yelp training files (`yelp_train.csv`, `business.json`, `user.json`, `checkin.json`, `photo.json`, `tip.json`). The dataset was provided by the course and is not included here.
