@@ -6,6 +6,8 @@
 
 The counterintuitive finding: every collaborative-filtering approach I tried made the model *worse*. The winning solution uses no collaborative filtering at all — just an XGBoost regressor on carefully engineered features.
 
+**In plain terms:** given a person and a business, guess how many stars that person will give it. This is the same problem behind every "recommended for you" list. Accuracy was scored by how far the guesses landed from the real ratings (lower is better), and 72% of my predictions came within one star. The competition rules required an older, more manual way of working with large data and capped both memory and running time, so the solution had to be efficient as well as accurate.
+
 ---
 
 ## Approach
